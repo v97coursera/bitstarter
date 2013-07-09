@@ -54,45 +54,44 @@ var checkHtmlFile = function(htmlfile, checksfile, urlindex) {
 	console.log("using urlindex");
 
 	var urlString = urlindex.toString();
-    
-	restler.get(urlString).on('complete', function(result){
-	if(result instanceof Error){
-	    console.log("%s Url does not exist. Exiting.", urlString);
-	    process.exit(1);
-	}
-	else
-	{
-	    console.log("%s Url exists!", urlString);
-	    $ = cheerio.load(result.toString());	    
-	    var checks = loadChecks(checksfile).sort();
-	    var out = {};
-	    for(var ii in checks) {
-		var present = $(checks[ii]).length > 0;	
-		out[checks[ii]] = present;
-	    }
-	    console.log(out);
-	    return out;
-	}
-    });
 
-	
+	restler.get(urlString).on('complete', function(result){
+	    if(result instanceof Error){
+		console.log("%s Url does not exist. Exiting.", urlString);
+		process.exit(1);
+	    }
+	    else
+	    {
+		console.log("%s Url exists!", urlString);
+		$ = cheerio.load(result.toString());	    
+		return doCheck($, checksfile);
+		
+	    }
+	});
+
+
     }
     else
     {
 	console.log("htmlfile exists")
 	$ = cheerioHtmlFile(htmlfile);	  
-
-	var checks = loadChecks(checksfile).sort();
-	var out = {};
-	for(var ii in checks) {
-            var present = $(checks[ii]).length > 0;	
-            out[checks[ii]] = present;
-	}
-	return out;
+	return doCheck($, checksfile);
+	
     }        
    
 };
 
+
+var doCheck = function($, checksfile){
+    var checks = loadChecks(checksfile).sort();
+    var out = {};
+    for(var ii in checks) {
+        var present = $(checks[ii]).length > 0;	
+        out[checks[ii]] = present;
+    }
+    //console.log(out);
+    return out;
+}
 
 var clone = function(fn) {
     // Workaround for commander.js issue.
