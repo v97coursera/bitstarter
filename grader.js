@@ -51,36 +51,33 @@ var checkHtmlFile = function(htmlfile, checksfile, urlindex) {
     
     //if we're passed a URL, check if it exists then parse it with cheerio
     if(urlindex && urlindex.length > 0){
-	console.log("using urlindex");
-
+	//console.log("using urlindex");
 	var urlString = urlindex.toString();
+	return fromUrl(urlString, checksfile);
+    }
+    else
+    {
+	//console.log("using htmlfile")
+	$ = cheerioHtmlFile(htmlfile);	  
+	return doCheck($, checksfile);	
+    }        
+   
+};
 
-	restler.get(urlString).on('complete', function(result){
+var fromUrl = function(urlString, checksfile){
+    restler.get(urlString).on('complete', function(result){
 	    if(result instanceof Error){
 		console.log("%s Url does not exist. Exiting.", urlString);
 		process.exit(1);
 	    }
 	    else
 	    {
-		console.log("%s Url exists!", urlString);
-		$ = cheerio.load(result.toString());	    
-		return doCheck($, checksfile);
-		
+		//console.log("%s Url exists!", urlString);
+		$ = cheerio.load(result.toString());	
+		doCheck($, checksfile);
 	    }
 	});
-
-
-    }
-    else
-    {
-	console.log("htmlfile exists")
-	$ = cheerioHtmlFile(htmlfile);	  
-	return doCheck($, checksfile);
-	
-    }        
-   
-};
-
+}
 
 var doCheck = function($, checksfile){
     var checks = loadChecks(checksfile).sort();
@@ -89,8 +86,8 @@ var doCheck = function($, checksfile){
         var present = $(checks[ii]).length > 0;	
         out[checks[ii]] = present;
     }
-    //console.log(out);
-    return out;
+    
+    printToConsole(out);
 }
 
 var clone = function(fn) {
@@ -106,9 +103,13 @@ if(require.main == module) {
 	.option('-u, --url <file_url>', 'Url of index.html', URLINDEX_DEFAULT)
         .parse(process.argv);
 
-    var checkJson = checkHtmlFile(program.file, program.checks, program.url);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+    checkHtmlFile(program.file, program.checks, program.url);
+    
 } else {
     exports.checkHtmlFile = checkHtmlFile;
+}
+
+function printToConsole(json){
+    var outJson = JSON.stringify(json, null, 4);
+    console.log(outJson);
 }
